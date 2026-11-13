@@ -4,11 +4,12 @@ I was reading Nucleus Genomics' preprint on their Origin polygenic scores and wa
 
 ## What's here
 
-- `demo/index.html` is a small calculator you can open in a browser. Pick a disease and 1 to 10 embryos to see the expected risk for the best, average and worst embryo. You can switch between the 2026 table and the 2025 preprint inputs, and between within-family and population R².
-- `demo/calc.js` is the model in about 75 lines of JavaScript.
-- `check.py` is the same model in Python (NumPy/SciPy), written with different numerics.
-- `crosscheck_py.py`, `crosscheck.js` and `crosscheck_ref.json` compare the two versions.
-- `make_chart.py` draws `chart.png`.
+- `demo/index.html` is a small calculator you can open in a browser. Pick a disease and 1 to 10 embryos to see the expected risk for the best, average and worst embryo. You can switch between the 2026 table and the 2025 preprint inputs.
+- `demo/calc.js` is the model in JavaScript.
+- `model.py` is the same model in Python (NumPy/SciPy), plus the inputs from both sources.
+- `reproduce.py` prints the match against the preprint's table and the 2026 type 2 diabetes and hypertension comparison.
+- `tests/` compares the JavaScript and Python versions and checks the integral against a simulation.
+- `scripts/make_chart.py` draws `chart.png`.
 
 ## The model
 
@@ -36,7 +37,7 @@ The preprint gives a vs average range of 27 to 67%, including 50% for type 2 dia
 
 ## How I checked it
 
-With the preprint's Supplementary Table 2 inputs, the model reproduces all 27 entries of the preprint's 2, 5 and 10 embryo table to within 1 point. With the 2026 inputs, it matches the calculator on mynucleus.com to within 0.05 points. The JavaScript and Python versions agree to within 1e-10 points across 360 cases, and a Monte Carlo run with 1M families agrees with the integral to 0.05 points.
+With the preprint's Supplementary Table 2 inputs, the model reproduces all 27 entries of the preprint's 2, 5 and 10 embryo table to within 1 point. With the 2026 inputs, it matches the calculator on mynucleus.com to within 0.05 points. The JavaScript and Python versions agree to within 0.001 points across 180 cases, and a Monte Carlo run with 1M families agrees with the integral to 0.05 points.
 
 - Nucleus validation table: https://mynucleus.com/labs (read Nov 12, 2026)
 - Nucleus embryo page: https://mynucleus.com/deep-dives/embryo
@@ -45,7 +46,8 @@ With the preprint's Supplementary Table 2 inputs, the model reproduces all 27 en
 ## Running it
 
 ```
-python3 check.py
-python3 crosscheck_py.py && node crosscheck.js
-python3 make_chart.py
+python3 reproduce.py
+python3 tests/crosscheck_py.py && node tests/crosscheck.js
+python3 tests/monte_carlo.py
+python3 scripts/make_chart.py
 ```
