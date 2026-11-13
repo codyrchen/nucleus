@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Embryo selection risk calculator: independent reproduction of Nucleus Origin figures</title>
+<style>
+  :root { --ink:#1b1f24; --muted:#5b6470; --line:#d9dee4; --best:#2f6fdf; --avg:#8a94a3; --worst:#d0533f; }
+  body { font: 15px/1.5 system-ui, -apple-system, Segoe UI, Roboto, sans-serif; color: var(--ink); max-width: 860px; margin: 32px auto; padding: 0 16px; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  .note { color: var(--muted); font-size: 13px; }
+  .banner { background:#fff6e0; border:1px solid #f0d9a0; padding:8px 12px; border-radius:6px; font-size:13px; margin:12px 0 20px; }
+  .controls { display:grid; grid-template-columns: repeat(auto-fit, minmax(190px,1fr)); gap:12px 20px; margin-bottom:20px; }
+  label { font-size:13px; color:var(--muted); display:block; margin-bottom:4px; }
+  select, input[type=range] { width:100%; }
+  .seg { display:flex; gap:0; } .seg button { flex:1; padding:6px 8px; border:1px solid var(--line); background:#fff; cursor:pointer; font-size:13px; }
+  .seg button.on { background:var(--ink); color:#fff; border-color:var(--ink); }
+  .cards { display:grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap:12px; margin: 8px 0 16px; }
+  .card { border:1px solid var(--line); border-radius:8px; padding:10px 12px; }
+  .card .k { font-size:12px; color:var(--muted); } .card .v { font-size:24px; font-weight:600; }
+  .band { font-size:12px; color:var(--muted); }
+  .bars { margin: 6px 0 20px; } .bar { display:flex; align-items:center; gap:8px; margin:4px 0; font-size:13px; }
+  .bar span.l { width:110px; color:var(--muted); } .bar div.track { flex:1; background:#f1f3f5; height:16px; border-radius:3px; }
+  .bar div.fill { height:16px; border-radius:3px; }
+  table { border-collapse: collapse; width:100%; font-size:13px; } th, td { padding:5px 8px; border-bottom:1px solid var(--line); text-align:right; }
+  th:first-child, td:first-child { text-align:left; } tr.sel td { background:#eef4ff; }
+  footer { margin-top:28px; font-size:12px; color:var(--muted); }
+  code { font-size: 12px; }
+</style>
+</head>
+<body>
+<h1>Embryo selection: expected disease risk by embryo rank</h1>
+<div class="note">Liability threshold model applied to the nine Nucleus Origin polygenic scores.</div>
+<div class="banner"><b>Independent reproduction by Cody Chen.</b> Not affiliated with or endorsed by Nucleus Genomics. Inputs are copied from Nucleus's public pages and preprint (sources below). This is a model of expected genetic risk, not medical advice.</div>
+
+<div class="controls">
+  <div><label for="disease">Disease</label><select id="disease"></select></div>
+  <div><label for="n">Viable embryos: <b id="nval">5</b></label><input id="n" type="range" min="1" max="10" value="5"></div>
+  <div><label>Inputs</label><div class="seg" id="src"><button data-v="site" class="on">2026 table</button><button data-v="paper">2025 preprint</button></div></div>
+  <div><label>R² used for selection</label><div class="seg" id="r2t"><button data-v="wf" class="on">Within-family</button><button data-v="pop">Population</button></div></div>
+</div>
+
+<div class="note" id="inputsline"></div>
+<div class="cards">
+  <div class="card"><div class="k">Best embryo (lowest score)</div><div class="v" id="best"></div></div>
+  <div class="card"><div class="k">Average embryo</div><div class="v" id="avg"></div></div>
+  <div class="card"><div class="k">Worst embryo (highest score)</div><div class="v" id="worst"></div></div>
+  <div class="card"><div class="k">Reduction vs worst</div><div class="v" id="vsw"></div><div class="band" id="vswb"></div></div>
+  <div class="card"><div class="k">Reduction vs average</div><div class="v" id="vsa"></div><div class="band" id="vsab"></div></div>
+</div>
+<div class="bars" id="bars"></div>
+
+<h3 style="font-size:16px;margin-bottom:6px">All nine diseases at <span id="ntab">5</span> embryos</h3>
+<table id="tab"><thead><tr><th>Disease</th><th>Prevalence</th><th>R²</th><th>Best</th><th>Average</th><th>Worst</th><th>vs worst</th><th>vs average</th></tr></thead><tbody></tbody></table>
+
+<footer>
+  <p><b>Model.</b> Liability = PGS + residual, total variance 1; disease if liability exceeds Φ⁻¹(1 − prevalence). PGS variance = R² (liability scale). Sibling embryos share the parental midpoint (variance R²/2) and differ by independent draws of variance R²/2. Ranking depends only on the sibling deviation, so the midpoint integrates out exactly: P(disease | deviation d) = Φ((√(R²/2)·d − T)/√(1 − R²/2)). Expected risk for the best and worst of n embryos is integrated over the min and max order-statistic densities. This is the approach of Lencz et al. (eLife 2021) cited by the preprint, and it reproduces the preprint's 2, 5 and 10 embryo table to within 1 point.</p>
+  <p><b>Sources.</b> 2026 table: "UK Biobank Validation of Nucleus Models", <a href="https://mynucleus.com/labs">mynucleus.com/labs</a> (read Nov 12, 2026). 2025 preprint: Cordogan et al., "Within- and Between-Family Validation of Nine Polygenic Risk Scores Developed in 1.5 Million Individuals", <a href="https://www.medrxiv.org/content/10.1101/2025.10.24.25338613v3">medRxiv 10.1101/2025.10.24.25338613</a>, Supplementary Table 2 (lifetime prevalence, liability R² and 95% CI) and Table 3 (within-family beta ratio). Within-family mode for the preprint follows the paper: only type 1 diabetes is reduced, by the beta ratio squared (0.827²). The uncertainty range is shown only for preprint inputs, using the published liability R² 95% CI; prevalence is held fixed. No CI is published for the 2026 table, so none is shown.</p>
+  <p>Code: <code>calc.js</code> (no dependencies). Python cross-check: <code>check.py</code>.</p>
+</footer>
+
+<script src="calc.js"></script>
+<script>
+(function () {
+  const C = window.EmbryoCalc;
+  const $ = (id) => document.getElementById(id);
+  const pct = (x, dp) => (100 * x).toFixed(dp ?? (x < 0.01 ? 3 : x < 0.1 ? 2 : 1)) + "%";
+  const state = { d: 0, n: 5, src: "site", wf: true };
+  C.DISEASES.forEach((d, i) => { const o = document.createElement("option"); o.value = i; o.textContent = d.name; $("disease").appendChild(o); });
+  function seg(id, key, map) {
+    $(id).querySelectorAll("button").forEach((b) => b.onclick = () => {
+      $(id).querySelectorAll("button").forEach((x) => x.classList.remove("on")); b.classList.add("on");
+      state[key] = map(b.dataset.v); render();
+    });
+  }
+  seg("src", "src", (v) => v); seg("r2t", "wf", (v) => v === "wf");
+  $("disease").onchange = (e) => { state.d = +e.target.value; render(); };
+  $("n").oninput = (e) => { state.n = +e.target.value; render(); };
+  function render() {
+    const d = C.DISEASES[state.d], inp = C.inputs(d, state.src, state.wf), r = C.expectedRisks(inp.K, inp.R2, state.n);
+    $("nval").textContent = state.n; $("ntab").textContent = state.n;
+    $("inputsline").textContent = `Inputs: lifetime prevalence ${pct(inp.K, 2)}, liability R² ${pct(inp.R2, 1)}` +
+      (inp.ci ? ` (95% CI ${pct(inp.ci[0], 1)} to ${pct(inp.ci[1], 1)})` : "") + `, European ancestry.`;
+    $("best").textContent = pct(r.best); $("avg").textContent = pct(r.avg); $("worst").textContent = pct(r.worst);
+    $("vsw").textContent = pct(r.vsWorst, 1); $("vsa").textContent = pct(r.vsAvg, 1);
+    if (inp.ci && state.n > 1) {
+      const lo = C.expectedRisks(inp.K, inp.ci[0], state.n), hi = C.expectedRisks(inp.K, inp.ci[1], state.n);
+      $("vswb").textContent = `R² CI: ${pct(lo.vsWorst, 1)} to ${pct(hi.vsWorst, 1)}`;
+      $("vsab").textContent = `R² CI: ${pct(lo.vsAvg, 1)} to ${pct(hi.vsAvg, 1)}`;
+    } else { $("vswb").textContent = ""; $("vsab").textContent = ""; }
+    const mx = r.worst;
+    $("bars").innerHTML = [["Best", r.best, "var(--best)"], ["Average", r.avg, "var(--avg)"], ["Worst", r.worst, "var(--worst)"]]
+      .map(([l, v, c]) => `<div class="bar"><span class="l">${l} ${pct(v)}</span><div class="track"><div class="fill" style="width:${100 * v / mx}%;background:${c}"></div></div></div>`).join("");
+    $("tab").querySelector("tbody").innerHTML = C.DISEASES.map((dd, i) => {
+      const ii = C.inputs(dd, state.src, state.wf), rr = C.expectedRisks(ii.K, ii.R2, state.n);
+      return `<tr class="${i === state.d ? "sel" : ""}"><td>${dd.name}</td><td>${pct(ii.K, 2)}</td><td>${pct(ii.R2, 1)}</td><td>${pct(rr.best)}</td><td>${pct(rr.avg)}</td><td>${pct(rr.worst)}</td><td>${pct(rr.vsWorst, 1)}</td><td>${pct(rr.vsAvg, 1)}</td></tr>`;
+    }).join("");
+  }
+  render();
+})();
+</script>
+</body>
+</html>
